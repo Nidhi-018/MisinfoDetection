@@ -1,0 +1,244 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Misinformation Detection API",
+    "version": "1.0.0",
+    "description": "API Gateway for Multi-Modal Misinformation Detection Platform"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/analyze/text": {
+      "post": {
+        "summary": "Analyze text content for misinformation",
+        "tags": ["Analyze"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "Text content to analyze"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analysis result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "string"},
+                    "type": {"type": "string"},
+                    "credibility_score": {"type": "number"},
+                    "risk_level": {"type": "string"},
+                    "text_analysis_score": {"type": "number"},
+                    "visual_analysis_score": {"type": "number"},
+                    "source_verified": {"type": "boolean"},
+                    "fact_check_match": {"type": "boolean"},
+                    "reasons": {"type": "array", "items": {"type": "string"}},
+                    "supporting_evidence": {"type": "array"},
+                    "summary": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "400": {"description": "Invalid input"}
+        }
+      }
+    },
+    "/api/v1/analyze/image": {
+      "post": {
+        "summary": "Analyze image content for misinformation",
+        "tags": ["Analyze"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["image"],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Analysis result"},
+          "400": {"description": "Invalid input"}
+        }
+      }
+    },
+    "/api/v1/analyze/url": {
+      "post": {
+        "summary": "Analyze URL content for misinformation",
+        "tags": ["Analyze"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Analysis result"},
+          "400": {"description": "Invalid input"}
+        }
+      }
+    },
+    "/api/v1/game/challenges": {
+      "get": {
+        "summary": "Get game challenges",
+        "tags": ["Game"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {"type": "integer", "default": 10},
+            "description": "Number of challenges to return"
+          }
+        ],
+        "responses": {
+          "200": {"description": "List of challenges"}
+        }
+      }
+    },
+    "/api/v1/game/answer": {
+      "post": {
+        "summary": "Submit answer to a challenge",
+        "tags": ["Game"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["challengeId", "userId", "answer"],
+                "properties": {
+                  "challengeId": {"type": "string"},
+                  "userId": {"type": "string"},
+                  "answer": {"type": "string", "enum": ["real", "fake"]}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Answer result with XP earned"},
+          "400": {"description": "Invalid input"}
+        }
+      }
+    },
+    "/api/v1/game/leaderboard": {
+      "get": {
+        "summary": "Get game leaderboard",
+        "tags": ["Game"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {"type": "string", "enum": ["daily", "weekly", "alltime"], "default": "alltime"}
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {"type": "integer", "default": 100}
+          }
+        ],
+        "responses": {
+          "200": {"description": "Leaderboard data"}
+        }
+      }
+    },
+    "/api/v1/admin/alerts": {
+      "get": {
+        "summary": "Get moderation alerts",
+        "tags": ["Admin"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {"type": "string", "enum": ["pending", "reviewed", "resolved", "all"], "default": "pending"}
+          }
+        ],
+        "responses": {
+          "200": {"description": "List of alerts"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v1/admin/action": {
+      "post": {
+        "summary": "Take action on a moderation alert",
+        "tags": ["Admin"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["alertId", "action"],
+                "properties": {
+                  "alertId": {"type": "string"},
+                  "action": {"type": "string", "enum": ["allow", "remove", "review"]}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Action taken successfully"},
+          "400": {"description": "Invalid input"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    }
+  }
+}
+

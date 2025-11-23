@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: misinformation-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - ML_SERVICE_URL=http://ml_service:5000
+      - ML_SERVICE_TIMEOUT=10000
+      - ML_SERVICE_RETRIES=3
+      - USE_MOCK_AUTH=true
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_WINDOW_MS=60000
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - PERSIST_UPLOADS=false
+      - PERSIST_TO_JSON=true
+      - DATA_DIR=/app/data
+      - UPLOADS_DIR=/app/uploads
+    volumes:
+      - ./gateway/uploads:/app/uploads
+      - ./data:/app/data
+    depends_on:
+      - ml_service
+    networks:
+      - misinformation-network
+
+  ml_service:
+    build:
+      context: ./ml_service
+      dockerfile: Dockerfile
+    container_name: misinformation-ml-service
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - DEBUG=false
+    volumes:
+      - ./ml_service/samples:/app/samples
+    networks:
+      - misinformation-network
+
+networks:
+  misinformation-network:
+    driver: bridge
+
